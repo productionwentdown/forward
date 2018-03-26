@@ -7,7 +7,7 @@ matrix:
     - darwin
 pipeline:
   build:
-    image: golang:${GO_VERSION}
+    image: golang:${GO_VERSION}-alpine
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
       - go build -ldflags "-s -w" -o dist/$FILENAME
