@@ -5,6 +5,9 @@ matrix:
     - linux
     - windows
     - darwin
+  GOARCH:
+    - amd64
+    - arm64
 pipeline:
   build:
     image: golang:${GO_VERSION}-alpine
