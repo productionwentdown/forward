@@ -3,11 +3,11 @@ matrix:
     - "1.10"
   GOOS:
     - linux
-    - windows
-    - darwin
+#    - windows
+#    - darwin
   GOARCH:
     - amd64
-    - arm64
+#    - arm64
 pipeline:
   build:
     image: golang:${GO_VERSION}-alpine
@@ -15,6 +15,8 @@ pipeline:
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
       - go version
+      - ls -lah
+      - ls vendor/
       - go build -ldflags "-s -w" -o dist/$FILENAME
   release:
     image: plugins/github-release
