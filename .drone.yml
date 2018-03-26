@@ -10,10 +10,11 @@ matrix:
 #    - arm64
 pipeline:
   build:
-    image: golang:${GO_VERSION}-alpine
+    image: golang:${GO_VERSION}
     pull: true
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
+      - if [ "$GOOS" == "windows" ]; then export FILENAME=$FILENAME.exe; fi
       - go version
       - ls -lah
       - ls vendor/
