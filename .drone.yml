@@ -2,23 +2,19 @@ matrix:
   GO_VERSION:
     - "1.10"
   GOOS:
-    - "windows"
-    - "linux"
-    - "darwin"
-  GOARCH:
-    - "amd64"
+    - linux
+    - windows
+    - darwin
 pipeline:
   build:
     image: golang:${GO_VERSION}
-    environment:
-      - FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
     commands:
-      - go build -ldflags "-s -w" -o "${FILENAME/windows-amd64/windows-amd64.exe}"
+      - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
+      - go build -ldflags "-s -w" -o dist/$FILENAME
   release:
     image: plugins/github-release
     secrets: [ github_token ]
-    environment:
-      - FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
-    files: [ "${FILENAME}" ]
+    files:
+      - dist/*
     when:
       event: tag
