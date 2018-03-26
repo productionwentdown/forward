@@ -10,7 +10,6 @@ matrix:
     - darwin
   GOARCH:
     - amd64
-    - arm64
 
 pipeline:
   build:
