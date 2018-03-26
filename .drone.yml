@@ -1,13 +1,17 @@
+workspace:
+  base: /go
+
 matrix:
   GO_VERSION:
     - "1.10"
   GOOS:
     - linux
-#    - windows
-#    - darwin
+    - windows
+    - darwin
   GOARCH:
     - amd64
-#    - arm64
+    - arm64
+
 pipeline:
   build:
     image: golang:${GO_VERSION}
@@ -15,10 +19,6 @@ pipeline:
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
       - if [[ "$GOOS" == "windows" ]]; then export FILENAME=$FILENAME.exe; fi
-      - go version
-      - ls -lah
-      - ls vendor/
-      - env
       - go build -ldflags "-s -w" -o dist/$FILENAME
   release:
     image: plugins/github-release
