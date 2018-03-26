@@ -1,0 +1,24 @@
+matrix:
+  GO_VERSION:
+    - "1.10"
+  GOOS:
+    - "windows"
+    - "linux"
+    - "darwin"
+  GOARCH:
+    - "amd64"
+pipeline:
+  build:
+  pipeline:
+  build:
+    image: golang:${GO_VERSION}
+    environment:
+      - FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
+    commands:
+      - go build -ldflags "-s -w" -o ${FILENAME/windows-amd64/windows-amd64.exe}
+  release:
+    image: plugins/github-release
+    secrets: [ github_token ]
+    files: app/build/outputs/apk/app-debug.apk
+    when:
+      event: tag
