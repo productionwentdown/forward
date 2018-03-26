@@ -18,7 +18,7 @@ pipeline:
     pull: true
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
-      - if [ "$GOOS" == "windows" ]; then export FILENAME=$FILENAME.exe; fi
+      - if [ "$GOOS" = "windows" ]; then export FILENAME=$FILENAME.exe; fi
       - go build -ldflags "-s -w" -o dist/$FILENAME
   release:
     image: plugins/github-release
