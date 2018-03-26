@@ -14,6 +14,7 @@ pipeline:
     pull: true
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
+      - go version
       - go build -ldflags "-s -w" -o dist/$FILENAME
   release:
     image: plugins/github-release
