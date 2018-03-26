@@ -1,68 +1,66 @@
 package main
 
 import (
-	"flag"
-	"io"
 	"log"
-	"net"
+	"os"
+	"path/filepath"
+	"sync"
+
+	"github.com/judwhite/go-svc/svc"
 )
 
-var listen string
-var connect string
+type program struct {
+	logFile *os.File
+	wg      sync.WaitGroup
+}
 
 func main() {
-	flag.StringVar(&listen, "listen", ":8000", "listen on ip and port")
-	flag.StringVar(&connect, "connect", "", "forward to ip and port")
-	flag.Parse()
+	prg := &program{}
 
-	// check and parse address
-	conn, err := net.ResolveTCPAddr("tcp", connect)
-	if err != nil {
-		flag.PrintDefaults()
+	if err := svc.Run(prg); err != nil {
 		log.Fatal(err)
-	}
-
-	// listen on address
-	ln, err := net.Listen("tcp", listen)
-	if err != nil {
-		flag.PrintDefaults()
-		log.Fatal(err)
-	}
-
-	log.Printf("listening on %v", ln.Addr())
-	log.Printf("will connect to %v", conn)
-
-	for i := 0; ; i++ {
-		// accept new connection
-		c, err := ln.Accept()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Printf("connection %v from %v", i, c.RemoteAddr())
-
-		cn, err := net.DialTCP("tcp", nil, conn)
-		if err != nil {
-			c.Close()
-			log.Print(err)
-			continue
-		}
-
-		go pipe(c, cn, i)
-		go pipe(cn, c, i)
 	}
 }
 
-func pipe(w io.WriteCloser, r io.ReadCloser, count int) {
-	n, err := io.Copy(w, r)
+func (p *program) Init(env svc.Environment) error {
+	if env.IsWindowsService() {
+		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			return err
+		}
+		logPath := filepath.Join(dir, "forward.log")
 
-	r.Close()
-	w.Close()
+		f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		if err != nil {
+			return err
+		}
 
-	log.Printf("connection %v closed, %v bytes", count, n)
-
-	opError, ok := err.(*net.OpError)
-	if err != nil && (!ok || opError.Op != "readfrom") {
-		log.Printf("warning! %v", err)
+		p.logFile = f
+		log.SetOutput(f)
 	}
+
+	setup()
+
+	return nil
+}
+
+func (p *program) Start() error {
+	p.wg.Add(1)
+	go func() {
+		serve()
+		p.wg.Done()
+	}()
+
+	log.Print("started")
+	return nil
+}
+
+func (p *program) Stop() error {
+	log.Print("stopping...")
+
+	ln.Close()
+	p.wg.Wait()
+
+	log.Print("stopped")
+	return nil
 }
