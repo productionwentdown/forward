@@ -15,6 +15,8 @@ pipeline:
   build:
     image: golang:${GO_VERSION}
     pull: true
+    environment:
+      - CGO_ENABLED=0
     commands:
       - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
       - if [ "$GOOS" = "windows" ]; then export FILENAME=$FILENAME.exe; fi
