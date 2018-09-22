@@ -3,7 +3,7 @@ workspace:
 
 matrix:
   GO_VERSION:
-    - "1.10"
+    - "1.11"
   GOOS:
     - linux
     - windows
