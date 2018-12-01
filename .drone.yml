@@ -1,30 +1,24 @@
-workspace:
-  base: /go
+kind: pipeline
+name: default
 
-matrix:
-  GO_VERSION:
-    - "1.11"
-  GOOS:
-    - linux
-    - windows
-    - darwin
-  GOARCH:
-    - amd64
-
-pipeline:
-  build:
-    image: golang:${GO_VERSION}
-    pull: true
-    environment:
-      - CGO_ENABLED=0
-    commands:
-      - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
-      - if [ "$GOOS" = "windows" ]; then export FILENAME=$FILENAME.exe; fi
-      - go build -ldflags "-s -w" -o dist/$FILENAME
-  release:
-    image: plugins/github-release
-    secrets: [ github_token ]
+steps:
+- name: build
+  image: golang:1.11
+  pull: true
+  environment:
+  - CGO_ENABLED=0
+  - GOOS=linux
+  - GOARCH=amd64
+  commands:
+  - export FILENAME=${DRONE_REPO_NAME}-${GOOS}-${GOARCH}
+  - if [ "$GOOS" = "windows" ]; then export FILENAME=$FILENAME.exe; fi
+  - go build -ldflags "-s -w" -o dist/$FILENAME
+- name: release
+  image: plugins/github-release
+  settings:
     files:
-      - dist/*
-    when:
-      event: tag
+    - dist/*
+    api_key:
+      from_secret: github_token
+  when:
+    event: tag
