@@ -20,5 +20,5 @@ steps:
     - dist/*
     api_key:
       from_secret: github_token
-  when:
-    event: tag
+    when:
+      event: tag
