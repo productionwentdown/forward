@@ -70,37 +70,53 @@ var magic = []byte{'S', 'S', 'H', '-'}
 var magicLen = len(magic)
 
 func handle(c net.Conn, count int) {
-	// read first four characters
-	readMagic := make([]byte, magicLen, magicLen)
-	n, err := c.Read(readMagic)
-	if n != magicLen {
-		log.Printf("warning! could not read header")
-		return
-	}
-	opError, ok := err.(*net.OpError)
-	if err != nil && (!ok || opError.Op != "readfrom") {
-		log.Printf("warning! %v", err)
-		return
-	}
+	if connSSH != nil {
 
-	connTo := conn
-	// if the header looks like SSH, forward to SSH connection
-	if bytes.Equal(readMagic, magic) {
-		connTo = connSSH
+		// read first four characters
+		readMagic := make([]byte, magicLen, magicLen)
+		n, err := c.Read(readMagic)
+		if n != magicLen {
+			log.Printf("warning! could not read header")
+			return
+		}
+		opError, ok := err.(*net.OpError)
+		if err != nil && (!ok || opError.Op != "readfrom") {
+			log.Printf("warning! %v", err)
+			return
+		}
+
+		connTo := conn
+		// if the header looks like SSH, forward to SSH connection
+		if bytes.Equal(readMagic, magic) {
+			connTo = connSSH
+		}
+
+		cn, err := net.DialTCP("tcp", nil, connTo)
+		if err != nil {
+			c.Close()
+			log.Print(err)
+			return
+		}
+
+		// write the first four characters
+		cn.Write(readMagic)
+
+		go pipe(c, cn, count)
+		go pipe(cn, c, count)
+
+	} else {
+
+		cn, err := net.DialTCP("tcp", nil, conn)
+		if err != nil {
+			c.Close()
+			log.Print(err)
+			return
+		}
+
+		go pipe(c, cn, count)
+		go pipe(cn, c, count)
+
 	}
-
-	cn, err := net.DialTCP("tcp", nil, connTo)
-	if err != nil {
-		c.Close()
-		log.Print(err)
-		return
-	}
-
-	// write the first four characters
-	cn.Write(readMagic)
-
-	go pipe(c, cn, count)
-	go pipe(cn, c, count)
 }
 
 func pipe(w io.WriteCloser, r io.ReadCloser, count int) {

@@ -9,10 +9,16 @@ A simple TCP proxy. Currently used in [AppVenture](https://appventure.nushigh.ed
 $ ./forward -help
 Usage of ./forward:
   -connect string
-    	forward to ip and port (default ":8080")
+    	forward to address
   -listen string
-    	listen on ip and port (default ":8081")
+    	listen on address (default ":8000")
+  -ssh string
+    	if set, will do basic introspection to forward SSH traffic to this address
 ```
+
+### Usage with SSH
+
+You can use `forward` to do multiplexing of SSH and HTTP in a quick and dirty way, using very simple protocol introspection. A more robust solution would be [sshttp](https://github.com/stealth/sshttp)
 
 ## Usage on Windows
 
